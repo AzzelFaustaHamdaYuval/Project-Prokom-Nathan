@@ -11,15 +11,19 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "studyfocus.db")
 
 def get_connection():
     """Return a connection to the SQLite database."""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(
+        DB_PATH,
+        timeout=10,
+        check_same_thread=False
+        )
     conn.row_factory = sqlite3.Row
     return conn
 
 
 def init_db():
     """Initialize the database and create tables if they don't exist."""
-    conn = get_connection()
-    cursor = conn.cursor()
+    with get_connection() as conn:
+        cursor = conn.cursor()
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS sessions (
@@ -30,15 +34,23 @@ def init_db():
             sleepy_duration INTEGER DEFAULT 0,     -- in seconds
             poor_posture_duration INTEGER DEFAULT 0, -- in seconds
             distraction_duration INTEGER DEFAULT 0,  -- in seconds
+            no_face_duration INTEGER DEFAULT 0,
             warning_count INTEGER DEFAULT 0,
             productivity_category TEXT DEFAULT 'Poor',
             created_at TEXT DEFAULT (datetime('now','localtime'))
         )
     """)
 
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_sessions_datE
+        ON sessions(date)
+    """)
+
     conn.commit()
     conn.close()
-    print("[DB] Database initialized successfully.")
+    import logging
+    
+    logging.info("Database initialized.")
 
 
 def save_session(data: dict) -> int:
@@ -51,8 +63,8 @@ def save_session(data: dict) -> int:
     cursor.execute("""
         INSERT INTO sessions
             (date, study_duration, focus_score, sleepy_duration,
-             poor_posture_duration, distraction_duration, warning_count, productivity_category)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+             poor_posture_duration, distraction_duration, no_face_duration, warning_count, productivity_category)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data.get("date"),
         data.get("study_duration", 0),
@@ -60,6 +72,7 @@ def save_session(data: dict) -> int:
         data.get("sleepy_duration", 0),
         data.get("poor_posture_duration", 0),
         data.get("distraction_duration", 0),
+        data.get("no_face_duration", 0),
         data.get("warning_count", 0),
         data.get("productivity_category", "Poor"),
     ))

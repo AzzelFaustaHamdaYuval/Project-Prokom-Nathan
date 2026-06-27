@@ -7,8 +7,9 @@ import mediapipe as mp
 import numpy as np
 import time
 
-SLOUCH_THRESHOLD = 15.0   # degrees of shoulder tilt considered slouching
+SLOUCH_THRESHOLD = 18.0   # degrees of shoulder tilt considered slouching
 SLOUCH_WARN_SEC  = 30.0   # warn after slouching for this many seconds
+MIN_SLOUCH_FRAMES = 5
 
 
 class PostureDetector:
@@ -23,10 +24,13 @@ class PostureDetector:
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5,
         )
+
         self._slouch_start: float | None = None
         self.poor_posture_duration: float = 0.0
         self.posture_state: str = "Good"
         self.warning_triggered: bool = False
+        self.slouch_frames: int = 0
+        
 
     def process(self, rgb_frame):
         """
@@ -55,23 +59,30 @@ class PostureDetector:
         right_ear = lms[self.mp_pose.PoseLandmark.RIGHT_EAR]
         ear_y     = (left_ear.y + right_ear.y) / 2.0
         shoulder_y= (left_shoulder.y + right_shoulder.y) / 2.0
-        head_forward = ear_y > shoulder_y - 0.05  # head drooping toward shoulders
+        head_forward = ear_y > shoulder_y - 0.03  # head drooping toward shoulders
 
         is_poor = (angle > SLOUCH_THRESHOLD) or head_forward
 
         if is_poor:
-            self.posture_state = "Poor"
-            if self._slouch_start is None:
-                self._slouch_start = now
-            elapsed = now - self._slouch_start
-            if elapsed >= SLOUCH_WARN_SEC:
-                self.warning_triggered = True
+            self.slouch_frames += 1
+            if self.slouch_frames >= MIN_SLOUCH_FRAMES:
+                self.posture_state = "Poor"
+                if self._slouch_start is None:
+                    self._slouch_start = now
+                
+                elapsed = now - self._slouch_start
+                if elapsed >= SLOUCH_WARN_SEC:
+                    self.warning_triggered = True
+                    
         else:
+            self.slouch_frames = 0
             self.posture_state = "Good"
             if self._slouch_start is not None:
                 self.poor_posture_duration += now - self._slouch_start
                 self._slouch_start = None
+
             self.warning_triggered = False
+            self.slouch_frames = 0
 
         return self.posture_state
 
@@ -85,6 +96,7 @@ class PostureDetector:
         self.poor_posture_duration = 0.0
         self.posture_state = "Good"
         self.warning_triggered = False
+        self.slouch_frames = 0
 
     def close(self):
         self.pose.close()

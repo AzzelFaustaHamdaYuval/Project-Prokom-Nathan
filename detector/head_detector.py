@@ -17,6 +17,10 @@ RIGHT_EYE   = 263
 
 LOOK_AWAY_THRESHOLD = 5.0  # seconds of looking away before penalising focus
 
+HORIZONTAL_THRESHOLD = 0.30
+DOWN_THRESHOLD = 1.10
+MIN_AWAY_FRAMES = 5
+
 
 class HeadDirectionDetector:
     """Estimate head direction from face landmarks."""
@@ -25,12 +29,17 @@ class HeadDirectionDetector:
         self._away_start: float | None = None
         self.distraction_duration: float = 0.0  # total seconds looking away
         self.direction: str = "Forward"
+        self.away_frames = 0    
 
     def process(self, landmarks, frame_w: int, frame_h: int) -> str:
         """
         Determine head direction and update distraction timer.
         Returns one of: 'Forward', 'Left', 'Right', 'Down'
         """
+        if landmarks is None:
+            self.direction = "Unknown"
+            return self.direction
+        
         def lm(idx):
             l = landmarks.landmark[idx]
             return np.array([l.x * frame_w, l.y * frame_h])
@@ -49,11 +58,11 @@ class HeadDirectionDetector:
         # Vertical: chin below eye-center relative to eye width
         vertical_offset   = (chin[1] - eye_center[1]) / (eye_width + 1e-6)
 
-        if horizontal_offset < -0.20:
+        if horizontal_offset < -HORIZONTAL_THRESHOLD:
             direction = "Right"   # face turned so nose points to the left of screen = head right
-        elif horizontal_offset > 0.20:
+        elif horizontal_offset > HORIZONTAL_THRESHOLD:
             direction = "Left"
-        elif vertical_offset < 1.2:
+        elif vertical_offset < DOWN_THRESHOLD:
             direction = "Down"
         else:
             direction = "Forward"
@@ -62,12 +71,16 @@ class HeadDirectionDetector:
         now = time.time()
 
         if direction != "Forward":
-            if self._away_start is None:
-                self._away_start = now
+            self.away_frames += 1
+            if self.away_frames >= MIN_AWAY_FRAMES:
+                if self._away_start is None:
+                    self._away_start = now
         else:
-            if self._away_start is not None:
-                self.distraction_duration += now - self._away_start
-                self._away_start = None
+            self.away_frames = 0
+            
+        if self._away_start is not None:
+            self.distraction_duration += now - self._away_start
+            self._away_start = None
 
         return direction
 
@@ -80,3 +93,4 @@ class HeadDirectionDetector:
         self._away_start = None
         self.distraction_duration = 0.0
         self.direction = "Forward"
+        self.away_frames = 0

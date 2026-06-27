@@ -11,6 +11,11 @@ import threading
 import datetime
 import os
 import json
+import mediapipe as mp
+
+print("MEDIAPIPE FILE :", mp.__file__)
+print("MEDIAPIPE VERSION :", mp.__version__)
+print("HAS SOLUTIONS :", hasattr(mp, "solutions"))
 
 from flask import (
     Flask, render_template, Response, jsonify,
@@ -67,7 +72,7 @@ def get_camera():
     global camera
     with camera_lock:
         if camera is None or not camera.isOpened():
-            camera = cv2.VideoCapture(0)
+            camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
             camera.set(cv2.CAP_PROP_FRAME_WIDTH,  640)
             camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
             camera.set(cv2.CAP_PROP_FPS, 15)
@@ -80,7 +85,6 @@ def release_camera():
         if camera is not None:
             camera.release()
             camera = None
-
 
 # ─── Background Analysis Thread ───────────────────────────────────────────────
 def analysis_thread():
@@ -118,6 +122,8 @@ def analysis_thread():
         if not all([fd, ed, hd, pd, start_t]):
             time.sleep(0.05)
             continue
+
+        print("FRAME GENERATED")
 
         # ── Detections ──────────────────────────────────────────────────
         landmarks = fd.process(rgb)
@@ -259,7 +265,7 @@ def report(session_id):
         return "Session tidak ditemukan"
 
     report_data = {
-        "student_name": "Nathan",
+        "student_name": "Nathania Calista Putri Andita",
         "date": session["date"],
         "study_duration": session["study_duration"],
         "session_id": session_id,
@@ -293,76 +299,46 @@ def video_feed():
 # ─── Session API ──────────────────────────────────────────────────────────────
 @app.route("/api/session/start", methods=["POST"])
 def start_session():
-    with session_lock:
-        if session_state["active"]:
-            return jsonify({"status": "already_active"}), 200
+    print("START SESSION DIPANGGIL")
 
-        # Initialise detectors
-        session_state["face_detector"]    = FaceDetector(no_face_threshold=10.0)
-        session_state["eye_detector"]     = EyeDetector()
-        session_state["head_detector"]    = HeadDirectionDetector()
-        session_state["posture_detector"] = PostureDetector()
-        session_state["start_time"]       = time.time()
-        session_state["warning_count"]    = 0
-        session_state["active"]           = True
+    try:
+        with session_lock:
+            if session_state["active"]:
+                return jsonify({"status": "already_active"})
 
-    return jsonify({"status": "started"})
+            print("Membuat FaceDetector...")
+            session_state["face_detector"] = FaceDetector(
+                no_face_threshold=10.0
+            )
 
+            print("Membuat EyeDetector...")
+            session_state["eye_detector"] = EyeDetector()
+
+            print("Membuat HeadDetector...")
+            session_state["head_detector"] = HeadDirectionDetector()
+
+            print("Membuat PostureDetector...")
+            session_state["posture_detector"] = PostureDetector()
+
+            session_state["start_time"] = time.time()
+            session_state["warning_count"] = 0
+            session_state["active"] = True
+
+        print("SESSION BERHASIL")
+        return jsonify({"status": "started"})
+
+    except Exception as e:
+        print("ERROR START SESSION:")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+    
 current_focus_score = 0
 current_eye_state = "Belum Terdeteksi"
 current_head_state = "Belum Terdeteksi"
 current_posture_state = "Belum Terdeteksi"
 
-from detector.eye_detector import EyeDetector
-eye_detector = EyeDetector()
 
-from detector.head_detector import HeadDirectionDetector
-head_detector = HeadDirectionDetector()
-
-current_eye_state = eye_detector.eye_state
-current_head_state = head_detector.direction
-
-
-@app.route("/api/session/stop", methods=["POST"])
-def stop_session():
-    with session_lock:
-        if not session_state["active"]:
-            return jsonify({"status": "not_active"}), 200
-
-        session_state["active"] = False
-
-        study_dur     = session_state["study_duration"]
-        sleepy_dur    = session_state["sleepy_duration"]
-        posture_dur   = session_state["poor_posture_duration"]
-        distract_dur  = session_state["distraction_duration"]
-        no_face_dur   = session_state["no_face_duration"]
-        warn_count    = session_state["warning_count"]
-        score         = session_state["focus_score"]
-        category      = get_category(score)
-
-        # Persist to DB
-        data = {
-            "date":                   datetime.date.today().isoformat(),
-            "study_duration":         study_dur,
-            "focus_score":            score,
-            "sleepy_duration":        int(sleepy_dur),
-            "poor_posture_duration":  int(posture_dur),
-            "distraction_duration":   int(distract_dur),
-            "warning_count":          warn_count,
-            "productivity_category":  category,
-        }
-        session_id = save_session(data)
-        session_state["last_session_id"] = session_id
-
-        # Clean up detectors
-        for key in ["face_detector", "eye_detector", "head_detector", "posture_detector"]:
-            d = session_state[key]
-            if d and hasattr(d, "close"):
-                d.close()
-            session_state[key] = None
-
-    release_camera()
-    return jsonify({"status": "stopped", "session_id": session_id})
 
 
 @app.route("/api/stats")
@@ -405,7 +381,7 @@ def session_report(session_id):
         session["focus_score"],
         session["sleepy_duration"],
         session.get("distraction_duration", 0),
-        session.get("distraction_duration", 0),  # no_face approximation
+        session.get("no_face_duration", 0),  # no_face approximation
         session["poor_posture_duration"],
         session["study_duration"],
     )

@@ -27,8 +27,8 @@ def _fmt_time(seconds: int) -> str:
     m  = (seconds % 3600) // 60
     s  = seconds % 60
     if h:
-        return f"{h}j {m}m {s}d"
-    return f"{m}m {s}d"
+        return f"{h}j {m}m {s}dtk"
+    return f"{m}m {s}dtk"
 
 
 def generate_pdf_report(session: dict, suggestions: list[str]) -> bytes:
@@ -89,6 +89,16 @@ def generate_pdf_report(session: dict, suggestions: list[str]) -> bytes:
     story.append(score_table)
     story.append(Spacer(1, 0.5*cm))
 
+    summary = (
+        f"Sesi belajar berlangsung selama "
+        f"{_fmt_time(session.get('study_duration',0))} "
+        f"dengan Focus Score {score}% "
+        f"({category})."
+    )
+
+    story.append(Paragraph(summary, body_style))
+    story.append(Spacer(1,0.4*cm))
+
     # ── Stats table ────────────────────────────────────────────────────────
     stats_data = [
         ["Metrik", "Nilai"],
@@ -96,9 +106,10 @@ def generate_pdf_report(session: dict, suggestions: list[str]) -> bytes:
         ["😴 Durasi Mengantuk",       _fmt_time(session.get("sleepy_duration", 0))],
         ["🧍 Postur Buruk",           _fmt_time(session.get("poor_posture_duration", 0))],
         ["👀 Durasi Distraksi",       _fmt_time(session.get("distraction_duration", 0))],
+        ["🚶 Tidak di Depan Kamera", _fmt_time(session.get("no_face_duration", 0))],
         ["⚠️ Jumlah Peringatan",     str(session.get("warning_count", 0))],
     ]
-    stat_table = Table(stats_data, colWidths=[10*cm, 6*cm])
+    stat_table = Table(stats_data, colWidths=[11*cm, 5*cm])
     stat_table.setStyle(TableStyle([
         ("BACKGROUND",   (0, 0), (-1, 0), PINK_PRIMARY),
         ("TEXTCOLOR",    (0, 0), (-1, 0), colors.white),
@@ -125,6 +136,11 @@ def generate_pdf_report(session: dict, suggestions: list[str]) -> bytes:
     story.append(HRFlowable(width="100%", thickness=1, color=PINK_SOFT))
     story.append(Spacer(1, 0.2*cm))
 
+    if not suggestions:
+        suggestions = [
+            "Pertahankan kebiasaan belajar yang baik."
+            ]
+        
     for i, suggestion in enumerate(suggestions, 1):
         story.append(Paragraph(f"{i}. {suggestion}", body_style))
         story.append(Spacer(1, 0.2*cm))
@@ -136,4 +152,7 @@ def generate_pdf_report(session: dict, suggestions: list[str]) -> bytes:
     story.append(Paragraph("StudyFocus AI • Dibuat dengan ❤ untuk produktivitas mahasiswa", footer_style))
 
     doc.build(story)
-    return buffer.getvalue()
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    return pdf

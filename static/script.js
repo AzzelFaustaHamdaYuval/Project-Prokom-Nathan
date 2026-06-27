@@ -145,7 +145,7 @@ function demoMode(){
     );
 
     updateText(
-        "head_state",
+        "head_direction",
         score > 75
             ? "Menghadap Layar"
             : "Menoleh"
@@ -324,12 +324,10 @@ document.querySelector(
 
 if(startButton){
 
-    startButton.addEventListener(
-        "click",
-        ()=>{
-
-            showToast(
-                "▶ Session Dimulai"
+    startButton.addEventListener( "click", async ()=>{
+        await startSession();
+        showToast(
+            "▶ Session Dimulai"
             );
 
         }
@@ -449,22 +447,32 @@ async function startSession() {
 
     console.log(data);
 
-    document.getElementById("video-feed").src =
+    setTimeout(() => {
+        document.getElementById("video-feed").src =
         "/video_feed?" + Date.now();
+    }, 300);
+
+window.startSession = async function () {
+    try {
+        const response = await fetch("/api/session/start", {
+            method: "POST"
+        });
+
+        const data = await response.json();
+
+        console.log(data);
+
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        document.getElementById("video-feed").src =
+            "/video_feed?" + Date.now();
+
+    } catch (err) {
+        console.error(err);
+    }
 }
 
-async function stopSession() {
-
-    const response = await fetch(
-        "/api/session/stop",
-        {
-            method: "POST"
-        }
-    );
-
-    const data = await response.json();
-
-    console.log(data);
-
-    document.getElementById("video-feed").src = "";
 }

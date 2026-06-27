@@ -6,6 +6,7 @@ Face presence detection using MediaPipe Face Mesh.
 import mediapipe as mp
 import time
 
+MIN_NO_FACE_FRAMES = 5
 
 class FaceDetector:
     """Detect whether a face is present in the frame."""
@@ -20,14 +21,15 @@ class FaceDetector:
             static_image_mode=False,
             max_num_faces=1,
             refine_landmarks=True,
-            min_detection_confidence=0.5,
-            min_tracking_confidence=0.5,
+            min_detection_confidence=0.6,
+            min_tracking_confidence=0.6,
         )
         self.no_face_threshold = no_face_threshold
         self._no_face_start: float | None = None
         self.no_face_duration: float = 0.0  # cumulative seconds without face
         self.warning_triggered: bool = False
         self.last_landmarks = None
+        self.no_face_frames = 0
 
     def process(self, rgb_frame):
         """
@@ -46,13 +48,16 @@ class FaceDetector:
             self.warning_triggered = False
             return self.last_landmarks
         else:
-            self.last_landmarks = None
-            if self._no_face_start is None:
-                self._no_face_start = now
-            elapsed = now - self._no_face_start
-            if elapsed >= self.no_face_threshold:
-                self.warning_triggered = True
-            return None
+           self.no_face_frames += 1
+           if self.no_face_frames >= MIN_NO_FACE_FRAMES:
+               self.last_landmarks = None
+               if self._no_face_start is None:
+                   self._no_face_start = now
+                   elapsed = now - self._no_face_start
+               if elapsed >= self.no_face_threshold:
+                   self.warning_triggered = True
+                   if self.no_face_frames < MIN_NO_FACE_FRAMES:
+                    return self.last_landmarks
 
     def get_no_face_duration(self) -> float:
         """Return total accumulated seconds where no face was detected."""
@@ -66,6 +71,8 @@ class FaceDetector:
         self.no_face_duration = 0.0
         self.warning_triggered = False
         self.last_landmarks = None
+
+        self.no_face_frames = 0
 
     def close(self):
         self.face_mesh.close()

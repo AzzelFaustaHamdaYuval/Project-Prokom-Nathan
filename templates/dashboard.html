@@ -42,7 +42,7 @@
         </li>
 
         <li>
-            <a href="/report">
+            <a href="/report/1">
                 <i class="fa-solid fa-file-pdf"></i>
                 Report
             </a>
@@ -98,6 +98,21 @@
 
     </div>
 
+    <!-- Bagian Tengah Video -->
+    <script>
+window.onload = async () => {
+
+    await fetch("/api/session/start", {
+        method: "POST"
+    });
+
+    document.getElementById("video-feed").src =
+        "/video_feed?" + Date.now();
+
+};
+</script>
+
+
     <!-- Camera Section -->
     <div class="camera-section">
 
@@ -107,11 +122,8 @@
                 <h2>Live Camera</h2>
             </div>
 
-            <img
-                src="/video_feed"
-                id="video-feed"
-                alt="Live Camera Feed"
-            >
+            <img id="video-feed"
+                alt="Live Camera Feed">
 
             <div class="camera-controls">
 

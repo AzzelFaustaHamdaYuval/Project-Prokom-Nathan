@@ -5,9 +5,9 @@ Focus score calculation (0-100) based on accumulated negative events.
 
 
 CATEGORIES = [
-    (85, "Excellent"),
-    (70, "Good"),
-    (50, "Average"),
+    (90, "Excellent"),
+    (75, "Good"),
+    (60, "Average"),
     (0,  "Poor"),
 ]
 
@@ -26,26 +26,35 @@ def calculate_focus_score(
     if study_duration <= 0:
         return 100.0
 
-    # Weight factors (how much each factor reduces focus per second)
-    SLEEPY_WEIGHT     = 3.0
-    DISTRACT_WEIGHT   = 2.0
-    NO_FACE_WEIGHT    = 2.5
-    POSTURE_WEIGHT    = 1.0
-
-    penalty = (
-        sleepy_duration     * SLEEPY_WEIGHT   +
-        distraction_duration* DISTRACT_WEIGHT  +
-        no_face_duration    * NO_FACE_WEIGHT   +
-        poor_posture_duration * POSTURE_WEIGHT
-    )
-
-    # Normalise penalty against total study time
-    penalty_ratio = penalty / (study_duration + 1e-6)
-
-    # Map penalty_ratio to score: 0 penalty = 100, high penalty → 0
-    score = max(0.0, 100.0 - (penalty_ratio * 50.0))
-    return round(min(score, 100.0), 1)
-
+    # Hitung rasio tiap kondisi terhadap total waktu belajar
+    sleep_ratio = sleepy_duration / study_duration
+    distract_ratio = distraction_duration / study_duration
+    noface_ratio = no_face_duration / study_duration
+    posture_ratio = poor_posture_duration / study_duration
+    
+    # Bobot penalti (lebih realistis)
+    sleep_penalty = sleep_ratio * 35
+    distract_penalty = distract_ratio * 25
+    noface_penalty = noface_ratio * 20
+    posture_penalty = posture_ratio * 15
+    
+    total_penalty = (
+        sleep_penalty +
+        distract_penalty +
+        noface_penalty +
+        posture_penalty
+        )
+    
+    score = 100 - total_penalty
+    
+    # Bonus jika tidak ada masalah besar
+    if sleep_ratio < 0.02:
+        score += 2
+        
+    if noface_ratio < 0.02:
+            score += 2
+            
+    return round(max(0, min(score, 100)), 1)
 
 def get_category(score: float) -> str:
     """Return productivity category string for a given score."""
