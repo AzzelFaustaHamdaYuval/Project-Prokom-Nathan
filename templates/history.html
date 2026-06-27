@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - StudyFocus AI</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+
+    <div class="logo">
+        <i class="fa-solid fa-brain"></i>
+        <span>StudyFocus AI</span>
+    </div>
+
+    <ul>
+        <li>
+            <a href="/dashboard">
+                <i class="fa-solid fa-chart-line"></i>
+                Dashboard
+            </a>
+        </li>
+
+        <li class="active">
+            <a href="/history">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                History
+            </a>
+        </li>
+
+        <li>
+            <a href="/analytics">
+                <i class="fa-solid fa-chart-column"></i>
+                Analytics
+            </a>
+        </li>
+
+        <li>
+            <a href="/report">
+                <i class="fa-solid fa-file-pdf"></i>
+                Report
+            </a>
+        </li>
+    </ul>
+
+</div>
+
+<!-- Main -->
+<div class="main-content">
+
+    <!-- Header -->
+    <div class="header">
+
+        <div>
+            <h1>Riwayat Sesi Belajar</h1>
+            <p>Data seluruh aktivitas monitoring fokus mahasiswa</p>
+        </div>
+
+    </div>
+
+    <!-- Summary -->
+    <div class="stats-container">
+
+        <div class="card">
+            <i class="fa-solid fa-book-open"></i>
+            <h2>25</h2>
+            <p>Total Sesi</p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-clock"></i>
+            <h2>48 Jam</h2>
+            <p>Total Durasi</p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-bullseye"></i>
+            <h2>84%</h2>
+            <p>Rata-rata Fokus</p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-award"></i>
+            <h2>Sangat Fokus</h2>
+            <p>Kategori Dominan</p>
+        </div>
+
+    </div>
+
+    <!-- Search -->
+    <div class="search-box">
+
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="Cari tanggal atau sesi..."
+        >
+
+        <button>
+            <i class="fa-solid fa-magnifying-glass"></i>
+            Cari
+        </button>
+
+    </div>
+
+    <!-- History Table -->
+    <div class="table-card">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>No</th>
+                    <th>Tanggal</th>
+                    <th>Durasi</th>
+                    <th>Focus Score</th>
+                    <th>Distraksi</th>
+                    <th>Kategori</th>
+                    <th>Aksi</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="historyTable">
+
+                {% for session in sessions %}
+
+                <tr>
+
+                    <td>{{ loop.index }}</td>
+
+                    <td>
+                        {{ session.date }}
+                    </td>
+
+                    <td>
+                        {{ session.study_duration }}
+                    </td>
+
+                    <td>
+                        {{ session.focus_score }}%
+                    </td>
+
+                    <td>
+                        {{ session.distraction_count }}
+                    </td>
+
+                    <td>
+
+                        {% if session.focus_score >= 80 %}
+                            <span class="badge success">
+                                Sangat Fokus
+                            </span>
+
+                        {% elif session.focus_score >= 60 %}
+                            <span class="badge warning">
+                                Cukup Fokus
+                            </span>
+
+                        {% else %}
+                            <span class="badge danger">
+                                Kurang Fokus
+                            </span>
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        <a
+                            href="/report/{{ session.id }}"
+                            class="btn-view"
+                        >
+                            Detail
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+const searchInput =
+document.getElementById("searchInput");
+
+searchInput.addEventListener("keyup", function() {
+
+    let filter =
+    searchInput.value.toLowerCase();
+
+    let rows =
+    document.querySelectorAll("#historyTable tr");
+
+    rows.forEach(row => {
+
+        let text =
+        row.textContent.toLowerCase();
+
+        row.style.display =
+        text.includes(filter)
+        ? ""
+        : "none";
+
+    });
+
+});
+
+</script>
+
+</body>
+</html>

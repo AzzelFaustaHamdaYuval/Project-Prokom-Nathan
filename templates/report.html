@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Analisis - StudyFocus AI</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+
+    <div class="logo">
+        <i class="fa-solid fa-brain"></i>
+        <span>StudyFocus AI</span>
+    </div>
+
+    <ul>
+
+        <li>
+            <a href="/dashboard">
+                <i class="fa-solid fa-chart-line"></i>
+                Dashboard
+            </a>
+        </li>
+
+        <li>
+            <a href="/history">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                History
+            </a>
+        </li>
+
+        <li>
+            <a href="/analytics">
+                <i class="fa-solid fa-chart-column"></i>
+                Analytics
+            </a>
+        </li>
+
+        <li class="active">
+            <a href="/report">
+                <i class="fa-solid fa-file-pdf"></i>
+                Report
+            </a>
+        </li>
+
+    </ul>
+
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+
+    <div class="header">
+        <div>
+            <h1>Laporan Hasil Analisis</h1>
+            <p>Ringkasan performa fokus belajar mahasiswa</p>
+        </div>
+
+        <a href="/api/session/{{ report.session_id }}/pdf"
+        class="download-btn">
+            <i class="fa-solid fa-download"></i>
+            Download PDF
+        </a>
+    </div>
+
+    <!-- Student Info -->
+    <div class="report-card">
+
+        <h2>Informasi Sesi</h2>
+
+        <div class="info-grid">
+
+            <div>
+                <strong>Nama Mahasiswa</strong>
+                <p>{{ report.student_name }}</p>
+            </div>
+
+            <div>
+                <strong>Tanggal</strong>
+                <p>{{ report.date }}</p>
+            </div>
+
+            <div>
+                <strong>Durasi Belajar</strong>
+                <p>{{ report.study_duration }}</p>
+            </div>
+
+            <div>
+                <strong>ID Sesi</strong>
+                <p>{{ report.session_id }}</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Summary -->
+    <div class="stats-container">
+
+        <div class="card">
+            <i class="fa-solid fa-bullseye"></i>
+            <h2>{{ report.focus_score }}%</h2>
+            <p>Focus Score</p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-eye"></i>
+            <h2>{{ report.eye_focus_percent }}%</h2>
+            <p>Eye Focus</p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-user"></i>
+            <h2>{{ report.head_focus_percent }}%</h2>
+            <p>Head Focus</p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-person"></i>
+            <h2>{{ report.posture_score }}%</h2>
+            <p>Posture Score</p>
+        </div>
+
+    </div>
+
+    <!-- Focus Classification -->
+    <div class="report-card">
+
+        <h2>Kategori Fokus</h2>
+
+        {% if report.focus_score >= 80 %}
+
+        <div class="status-box success">
+            🟢 Sangat Fokus
+        </div>
+
+        {% elif report.focus_score >= 60 %}
+
+        <div class="status-box warning">
+            🟡 Cukup Fokus
+        </div>
+
+        {% else %}
+
+        <div class="status-box danger">
+            🔴 Kurang Fokus
+        </div>
+
+        {% endif %}
+
+    </div>
+
+    <!-- Distraction Analysis -->
+    <div class="report-card">
+
+        <h2>Analisis Distraksi</h2>
+
+        <table class="report-table">
+
+            <tr>
+                <td>Total Distraksi</td>
+                <td>{{ report.distraction_count }}</td>
+            </tr>
+
+            <tr>
+                <td>Menoleh ke Samping</td>
+                <td>{{ report.look_away_count }}</td>
+            </tr>
+
+            <tr>
+                <td>Mata Tertutup</td>
+                <td>{{ report.eye_closed_count }}</td>
+            </tr>
+
+            <tr>
+                <td>Postur Tidak Ideal</td>
+                <td>{{ report.bad_posture_count }}</td>
+            </tr>
+
+        </table>
+
+    </div>
+
+    <!-- AI Recommendation -->
+    <div class="report-card">
+
+        <h2>
+            <i class="fa-solid fa-lightbulb"></i>
+            Rekomendasi Sistem
+        </h2>
+
+        <div class="recommendation-box">
+
+            {{ report.recommendation }}
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

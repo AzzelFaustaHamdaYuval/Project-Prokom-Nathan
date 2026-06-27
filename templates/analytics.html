@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - StudyFocus AI</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="sidebar">
+
+    <div class="logo">
+        <i class="fa-solid fa-brain"></i>
+        <span>StudyFocus AI</span>
+    </div>
+
+    <ul>
+        <li>
+            <a href="/dashboard">
+                <i class="fa-solid fa-chart-line"></i>
+                Dashboard
+            </a>
+        </li>
+
+        <li>
+            <a href="/history">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                History
+            </a>
+        </li>
+
+        <li class="active">
+            <a href="/analytics">
+                <i class="fa-solid fa-chart-column"></i>
+                Analytics
+            </a>
+        </li>
+
+        <li>
+            <a href="/report">
+                <i class="fa-solid fa-file-pdf"></i>
+                Report
+            </a>
+        </li>
+    </ul>
+
+</div>
+
+<div class="main-content">
+
+    <div class="header">
+        <div>
+            <h1>Analytics Dashboard</h1>
+            <p>Analisis Data Fokus Belajar Mahasiswa</p>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="stats-container">
+
+        <div class="card">
+            <i class="fa-solid fa-bullseye"></i>
+            <h2 id="avg_focus">85%</h2>
+            <p>Rata-rata Fokus</p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-clock"></i>
+            <h2 id="study_duration">2 Jam</h2>
+            <p>Total Durasi Belajar</p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <h2 id="distraction_count">15</h2>
+            <p>Total Distraksi</p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-award"></i>
+            <h2 id="focus_category">Sangat Fokus</h2>
+            <p>Kategori</p>
+        </div>
+
+    </div>
+
+    <!-- Charts -->
+    <div class="chart-grid">
+
+        <div class="chart-card">
+            <h3>Focus Score Harian</h3>
+            <canvas id="focusChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <h3>Distraksi per Sesi</h3>
+            <canvas id="distractionChart"></canvas>
+        </div>
+
+    </div>
+
+    <!-- Insight -->
+    <div class="insight-card">
+
+        <h2>
+            <i class="fa-solid fa-lightbulb"></i>
+            Insight AI
+        </h2>
+
+        <p id="ai_insight">
+            Berdasarkan hasil analisis, mahasiswa menunjukkan tingkat fokus yang baik.
+            Distraksi masih berada dalam batas normal dan durasi belajar cukup konsisten.
+            Disarankan untuk mempertahankan pola belajar saat ini.
+        </p>
+
+    </div>
+
+</div>
+
+<script>
+
+const focusCtx = document.getElementById('focusChart');
+
+new Chart(focusCtx, {
+    type: 'line',
+    data: {
+        labels: [
+            'Sen',
+            'Sel',
+            'Rab',
+            'Kam',
+            'Jum',
+            'Sab',
+            'Min'
+        ],
+        datasets: [{
+            label: 'Focus Score',
+            data: [82, 75, 90, 88, 79, 85, 92],
+            borderWidth: 3,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true
+    }
+});
+
+const distractionCtx =
+document.getElementById('distractionChart');
+
+new Chart(distractionCtx, {
+    type: 'bar',
+    data: {
+        labels: [
+            'Sesi 1',
+            'Sesi 2',
+            'Sesi 3',
+            'Sesi 4',
+            'Sesi 5'
+        ],
+        datasets: [{
+            label: 'Distraksi',
+            data: [4, 7, 2, 5, 3]
+        }]
+    },
+    options: {
+        responsive: true
+    }
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - StudyFocus AI</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+
+    <div class="logo">
+        <i class="fa-solid fa-brain"></i>
+        <span>StudyFocus AI</span>
+    </div>
+
+    <ul>
+        <li class="active">
+            <a href="/dashboard">
+                <i class="fa-solid fa-chart-line"></i>
+                Dashboard
+            </a>
+        </li>
+
+        <li>
+            <a href="/history">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                History
+            </a>
+        </li>
+
+        <li>
+            <a href="/analytics">
+                <i class="fa-solid fa-chart-column"></i>
+                Analytics
+            </a>
+        </li>
+
+        <li>
+            <a href="/report">
+                <i class="fa-solid fa-file-pdf"></i>
+                Report
+            </a>
+        </li>
+    </ul>
+
+</div>
+
+<!-- Main -->
+<div class="main-content">
+
+    <!-- Header -->
+    <div class="header">
+
+        <div>
+            <h1>Dashboard Monitoring</h1>
+            <p>Analisis Fokus Belajar Mahasiswa Secara Realtime</p>
+        </div>
+
+        <div class="status-online">
+            <span class="dot"></span>
+            Realtime Monitoring
+        </div>
+
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-container">
+
+        <div class="card">
+            <i class="fa-solid fa-bullseye"></i>
+            <h3 id="focus_score">0%</h3>
+            <p>Focus Score</p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-eye"></i>
+            <h3 id="eye_state">-</h3>
+            <p>Status Mata</p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-user"></i>
+            <h3 id="head_state">-</h3>
+            <p>Status Kepala</p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-person"></i>
+            <h3 id="posture_state">-</h3>
+            <p>Status Postur</p>
+        </div>
+
+    </div>
+
+    <!-- Camera Section -->
+    <div class="camera-section">
+
+        <div class="video-card">
+
+            <div class="video-header">
+                <h2>Live Camera</h2>
+            </div>
+
+            <img
+                src="/video_feed"
+                id="video-feed"
+                alt="Live Camera Feed"
+            >
+
+            <div class="camera-controls">
+
+                <button class="start-btn" onclick="startSession()">
+                    <i class="fa-solid fa-play"></i>
+                    Start Session
+                </button>
+
+                <button class="stop-btn" onclick="stopSession()">
+                    <i class="fa-solid fa-stop"></i>
+                    Stop Session
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- Side Panel -->
+        <div class="info-panel">
+
+            <div class="info-card">
+
+                <h3>Focus Level</h3>
+
+                <div class="progress-container">
+                    <div class="progress-bar" id="focus_bar"></div>
+                </div>
+
+                <p id="focus_text">0%</p>
+
+            </div>
+
+            <div class="info-card">
+
+                <h3>Durasi Belajar</h3>
+
+                <h2 id="study_time">
+                    00:00:00
+                </h2>
+
+            </div>
+
+            <div class="info-card">
+
+                <h3>Kategori Fokus</h3>
+
+                <h2 id="focus_category">
+                    Menunggu Data
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+</html>
